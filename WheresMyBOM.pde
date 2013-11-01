@@ -58,6 +58,50 @@ void setup()
   String tmpIm = newImage();
   
   frameRate(1);
+  
+  StringList tmp = searchFiles();
+}
+
+StringList searchFiles()
+{
+  println("Searching for files...");
+  StringList images = new StringList();
+  
+  try
+  {
+    ftp = new FileTransferClient();
+    
+    ftp.setRemoteHost(host);
+    ftp.setUserName(username);
+    ftp.setPassword(password);
+    ftp.connect();
+    ftp.changeDirectory(folder);
+    
+    //Don't rely on local timestamps... get directory list and search for files
+    String[] files = ftp.directoryNameList();
+
+    ftp.disconnect();
+    
+    int i = 0;
+    
+    for(int j = 0; j < files.length; j++)
+    {
+      if (files[j].startsWith("IDR023.T."))
+      {
+        println("Found File: "+files[j]);
+        images.append(files[j]);
+      }
+    }
+    
+  }
+  catch (Exception e)
+  {
+    e.printStackTrace();
+  }
+  
+  
+  println(images);
+  return images;
 }
 
 String newImage()
@@ -100,6 +144,10 @@ String newImage()
     ftp.setPassword(password);
     ftp.connect();
     ftp.changeDirectory(folder);
+    
+    String[] files = ftp.directoryNameList();
+    println(files);
+    
     if (ftp.exists(image))
     {
       println("Downloading... "+image+" :"+imgStr);
@@ -123,6 +171,10 @@ String newImage()
         println("Downloading... "+image+" :"+imgStr);
         ftp.downloadURLFile(local+".png", imgStr);
         //ftp.downloadURLFile("IDR023.T.201310290954.png", "ftp://ftp2.bom.gov.au/anon/gen/radar/IDR023.T.201310290954.png");
+      }
+      else
+      {
+        //image = searchFiles(ftp, year, month, day, hour, minute);
       }
     }
     
