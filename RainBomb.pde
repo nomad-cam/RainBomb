@@ -156,10 +156,27 @@ void deleteCache(int num)
   }
 }
 
+void mouseClicked()
+{
+  //
+  println(mouseX,mouseY);
+  int coordX = mouseX - 256;
+  int coordY = mouseY - 256;
+  
+  //drawBackground();
+  
+  target = loadImage("http://www.bom.gov.au/products/radar_transparencies/IDR023.range.png", "png");
+  image(target,coordX,coordY); 
+  
+  uPrefs.putInt("CoordX", coordX);
+  uPrefs.putInt("CoordY", coordY);
+}
+
 void draw()
 {  
   //noLoop();
   //println(count);
+  loading = loadImage("http://www.bom.gov.au/scripts/radar/IDR.please.wait.gif", "gif");
   
   if (runonce)
   {
@@ -175,11 +192,12 @@ void draw()
   varTime = millis() - savedTime;
   
   //Timer to check server every 3 minutes
-  if ((varTime / 30000) > 1.0)
+  if ((varTime / 180000) > 1.0)
   {
     int oldsz = image.size();
     deleteCache(oldsz);
     
+    //Doesn't seem to display loading image...
     image(loading, 0, 0);
     image = newImage();
     sz = image.size();
@@ -198,10 +216,11 @@ void draw()
     count = 0;
   }
   
-  //deleteCache(6);
+  int coordX = uPrefs.getInt("CoordX",0);
+  int coordY = uPrefs.getInt("CoordY",0);
   
   //Overlay other images...
-  image(target, 0, 0);
+  image(target, coordX, coordY);
   image(towns, 0, 0);
   
 }
