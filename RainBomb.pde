@@ -159,7 +159,7 @@ void deleteCache(int num)
 void mouseClicked()
 {
   //
-  println(mouseX,mouseY);
+  //println(mouseX,mouseY);
   int coordX = mouseX - 256;
   int coordY = mouseY - 256;
   
