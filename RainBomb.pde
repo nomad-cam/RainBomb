@@ -1,5 +1,10 @@
+import blobDetection.*;
+
 import java.util.prefs.*;
 import java.io.File;
+
+BlobDetection theBlobDetection;
+//PGraphics img;
 
 FileTransferClient ftp = null;
 FileTransferClient ftpD = null;
@@ -55,6 +60,11 @@ void setup()
   image(loading,0,0);
 
   frameRate(1.0);
+  
+  theBlobDetection = new BlobDetection(512, 512);
+  theBlobDetection.setPosDiscrimination(false);
+  theBlobDetection.setThreshold(0.38f);
+  
   
   //StringList tmp = searchFiles();
   //println(sketchPath(""));
@@ -172,6 +182,10 @@ void mouseClicked()
   uPrefs.putInt("CoordY", coordY);
 }
 
+//************************************************************
+//
+//
+//************************************************************
 void draw()
 {  
   //noLoop();
@@ -207,8 +221,12 @@ void draw()
   }
     
   //Image format IDR023.T.201310280942.png
+  img = loadImage(sketchPath(count+".png"), "png");
   drawBackground();
   image(loadImage(sketchPath(count+".png"), "png"),0,0);
+  
+  theBlobDetection.computeBlobs(img.pixels);
+  drawBlobsAndEdges(true, true);
   
   count = count + 1;
   if (count >= sz )
@@ -223,4 +241,48 @@ void draw()
   image(target, coordX, coordY);
   image(towns, 0, 0);
   
+}
+
+// ==================================================
+// drawBlobsAndEdges()
+// ==================================================
+void drawBlobsAndEdges(boolean drawBlobs, boolean drawEdges)
+{
+  noFill();
+  Blob b;
+  EdgeVertex eA, eB;
+  for (int n=0 ; n<theBlobDetection.getBlobNb() ; n++)
+  {
+    b=theBlobDetection.getBlob(n);
+    if (b!=null)
+    {
+      // Edges
+      if (drawEdges)
+      {
+        strokeWeight(2);
+        stroke(0, 255, 0);
+        for (int m=0;m<b.getEdgeNb();m++)
+        {
+          eA = b.getEdgeVertexA(m);
+          eB = b.getEdgeVertexB(m);
+          if (eA !=null && eB !=null)
+            line(
+            eA.x*width, eA.y*height, 
+            eB.x*width, eB.y*height
+              );
+        }
+      }
+
+      // Blobs
+      if (drawBlobs)
+      {
+        strokeWeight(1);
+        stroke(255, 0, 0);
+        rect(
+        b.xMin*width, b.yMin*height, 
+        b.w*width, b.h*height
+          );
+      }
+    }
+  }
 }
