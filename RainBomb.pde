@@ -1,4 +1,5 @@
 import java.util.prefs.*;
+import java.io.File;
 
 FileTransferClient ftp = null;
 FileTransferClient ftpD = null;
@@ -21,6 +22,7 @@ String password = "guest";
 int frames = 5;
 int local = 0;
 int count = frames;
+int sz = 0;
 String[] loop = new String[frames];
 StringList image = new StringList();
 
@@ -45,10 +47,7 @@ void setup()
 {
   size(512, 557);
   drawBackground();
-  //legend = loadImage("http://www.bom.gov.au/products/radar_transparencies/IDR.legend.0.png", "png");
-  //background = "http://www.bom.gov.au/products/radar_transparencies/IDR023.background.png";
-  //topography = loadImage("http://www.bom.gov.au/products/radar_transparencies/IDR023.topography.png", "png");
-  //background = loadImage("http://www.bom.gov.au/products/radar_transparencies/IDR023.background.png", "png");
+
   target = loadImage("http://www.bom.gov.au/products/radar_transparencies/IDR023.range.png", "png");
   towns = loadImage("http://www.bom.gov.au/products/radar_transparencies/IDR023.locations.png", "png");
   loading = loadImage("http://www.bom.gov.au/scripts/radar/IDR.please.wait.gif", "gif");
@@ -58,6 +57,7 @@ void setup()
   frameRate(1.0);
   
   //StringList tmp = searchFiles();
+  //println(sketchPath(""));
 }
 
 StringList searchFiles()
@@ -113,7 +113,7 @@ StringList newImage()
   try
   {
     ftpD = new FileTransferClient();
-    //Need to test if iomage is available on server... Might be mismatch between local and server time
+    
     ftpD.setRemoteHost(host);
     ftpD.setUserName(username);
     ftpD.setPassword(password);
@@ -128,7 +128,8 @@ StringList newImage()
       image = Images.get(i);
       imgStr = "ftp://"+host+folder+image;
       //println(i+"New: "+imgStr);
-      ftpD.downloadURLFile(i+".png", imgStr);
+      ftpD.downloadURLFile(sketchPath(i+".png"), imgStr);
+      
     }
     //println("Loop collect complete");
     
@@ -142,6 +143,19 @@ StringList newImage()
   return Images;
 }
 
+void deleteCache(int num)
+{
+  //
+  for ( int t = 0; t < num; t++)
+  {
+    File del = new File(sketchPath(t+".png"));
+    if (del.exists())
+    {
+      del.delete();
+    }
+  }
+}
+
 void draw()
 {  
   //noLoop();
@@ -149,41 +163,43 @@ void draw()
   
   if (runonce)
   {
+    int oldsz = image.size();
+    deleteCache(oldsz);
     //println("Run once...");
     image(loading, 0, 0);
     image = newImage();
+    sz = image.size();
     runonce = false;
   }
   
   varTime = millis() - savedTime;
   
   //Timer to check server every 3 minutes
-  if ((varTime / 180000) > 1.0)
+  if ((varTime / 30000) > 1.0)
   {
+    int oldsz = image.size();
+    deleteCache(oldsz);
+    
     image(loading, 0, 0);
     image = newImage();
-    //img = loadImage(image, "png");
-    
+    sz = image.size();
+        
     //update the saved time
     savedTime = millis();
   }
-  
-  
-  //String image = newImage();
-  //img = loadImage(image, "png");
     
   //Image format IDR023.T.201310280942.png
   drawBackground();
-  image(loadImage(count+".png", "png"),0,0);
-  //delay(200);
+  image(loadImage(sketchPath(count+".png"), "png"),0,0);
   
   count = count + 1;
-  if (count >= image.size())
+  if (count >= sz )
   {
     count = 0;
   }
   
- 
+  //deleteCache(6);
+  
   //Overlay other images...
   image(target, 0, 0);
   image(towns, 0, 0);
